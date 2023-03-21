@@ -1,0 +1,26 @@
+#!/bin/bash
+set -e
+
+#SumoTV - Upload Script v.2.0.0
+# Damit alle 12h das script automatisch ausgeführt wird. 
+# crontab -e 0 */12 * * * /home/rclone/scripts/ 
+# RClone Config
+RCLONE_CONFIG=/root/.config/rclone/rclone.conf; export RCLONE_CONFIG
+
+# Local Drive - Dies muss ein lokaler Mount-Punkt auf Ihrem Server sein, der für die Quelle der Dateien verwendet wird
+# WARNING: Auf keinen Fall die Google-Drive-Mount hier eintragen !! 
+# > Du löscht damit alle deine datein in der CLOUD wenn du das tust.
+# Prüf nochmal das das wirklich deine LOKALER PFAD ist.
+LOCAL=/mnt/plexlocal
+
+# Exit if running
+if [[ $(pidof -x "$(basename "$0")" -o %PPID) ]]; then
+echo "Läuft bereits, wird beendet..."; exit 1; fi
+
+# Is $LOCAL wirklich ein Lokaler Mount Point?
+if /bin/findmnt $LOCAL -o FSTYPE -n | grep fuse; then
+echo "FUSE-Dateisystem gefunden, wird beendet..."; exit 1; fi
+
+# Der RCLONE Upload Befehl mit ENV
+# Die ENV sagt, UPLOAD erste Datein die min 2 Tage alte sind & Uploade immer mit Max Upload Limit der Cloud (GDrive).
+/usr/bin/rclone move $LOCAL gdrive-crypt: --log-file /opt/rclone/logs/upload.log --delete-empty-src-dirs --tpslimit=1 --drive-upload-cutoff 1000T --fast-list --max-transfer 500G --min-age 1h

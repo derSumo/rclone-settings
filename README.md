@@ -1,3 +1,8 @@
+# Vorinstalliern muss sein
+> rclone (bitte nicht von der REPO, sondern direkt das neuste)
+> fuse
+> MergeFS https://github.com/trapexit/mergerfs/releases/
+
 # rclone-settings
 Rclone-Service für Google Drive! Diese Lösung wurde speziell entwickelt, um die API-Beschränkungen
 von Google maximal nutzen zu können ohne Gebannt zu werden, die bei vielen Anfragen auftreten können. 

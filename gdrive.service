@@ -1,0 +1,63 @@
+[Unit]
+Description=Rclone mount Service
+# Dieser Service Startet erst nachdem eine Online Verbindung besteht.
+After=network-online.target
+
+[Service]
+Type=notify
+ExecStart=/usr/bin/rclone mount \
+  --config=/root/.config/rclone/rclone.conf \
+  --allow-other \
+# Ein Sehr Hocher Wert einstellen, weil die �nderungen durch Polling festgestellt werden, sorgt f�r daf�r das Meta Daten da sind. (default 5m0s)
+  --dir-cache-time=5000h \
+# Einstellen der Protokollierungsstufe NOTICE/INFO/ERROR 
+  --log-level=NOTICE \
+  --log-file=/opt/rclone/logs/plexdrive.log \
+# Ich reduziere das Abfrageintervall auf 10 (15) Sekunden, da dadurch �nderungen schnell angezeigt werden und die API-Quoten pro Tag sehr hoch sind. (default 1m0s)
+  --poll-interval=10s \
+# Performance und Verbsserung f�r die API (TPS Limit geht auf 10, bitte auf 9.5 max machen, in der vergangheit zeigt es oft mehr Fehler als recht) Weniger ist mehr.
+  --no-checksum \
+  --tpslimit=9.5 \
+  --use-server-modtime \
+  --no-update-modtime \
+  --no-modtime \
+  --no-seek \
+# Damit ebooks komplett geladen werden (Kann man auch löschen, falls keine cbz/zip datei komplett gelesen werden. Hat aber kein mehrwert beim löschen)
+  --no-gzip-encoding \
+# Zusätzlicher Lesevorlauf über --buffer-size bei Verwendung des Cachemodus full, von 128M auf 256M �ndern, TESTING
+  --buffer-size 256M \
+# Dies setzt die Dateiberechtigung auf dem Mount so, dass Benutzer und Gruppe den gleichen Zugriff haben und der andere lesen kann
+  --umask=002 \
+# Gruppe und User ID 
+  --gid=2000 \
+  --uid=2000 \
+# Der User Agent ist nur für die übersicht da.
+  --user-agent=plexdrive \
+  --timeout=1h \
+# Die lokale Festplatte, die f�r die Zwischenspeicherung verwendet wird.
+  --cache-dir=/mnt/rclone/cache/plexdrive \
+# Mein Kontingent pro Benutzer / pro 100 Sekunden betr�gt 20.000 Anfragen. Dies kann in Ihrem Quotenabschnitt gefunden werden.
+# Dies ändert die Sleep-Aufrufe auf einen viel niedrigeren Wert, um die Vorteile des API-Boosts zu nutzen.
+# �ndern Sie den min Sleep von 100ms
+  --drive-pacer-min-sleep 10ms \
+# �ndern der F�higkeit, mehr zu bursten
+  --drive-pacer-burst 200 \
+# Dies wird für die Zwischenspeicherung von Dateien auf der lokalen Festplatte f�r das Streaming verwendet
+  --vfs-cache-mode=full \
+# Dies begrenzt die Cachegröße auf den folgenden Wert
+  --vfs-cache-max-size=300G \
+# Dies begrenzt das Alter im Cache, wenn die Größe erreicht ist, und es werden die �ltesten Dateien zuerst entfernt
+  --vfs-cache-max-age=24h \
+# Das Abfrageintervall wird erhöht, wenn genügend Pufferplatz vorhanden ist.
+  --vfs-cache-poll-interval 5m \
+# Dies legt eine Bandbreitenkontrolle pro Datei fest, und ich begrenze diese auf eine etwas h�here als die größte Bitrate, die ich abspielen möchte. TESTING
+  --bwlimit-file 32M \
+  <rclonedrive>:<Pfad falls Nötig sonst "/"> <Rclone Mount Pfad z.b /mnt/rclone>
+ExecStop=/bin/fusermount -uz <Rclone Mount Pfad z.b /mnt/rclone>
+Restart=on-abort
+RestartSec=5
+StartLimitInterval=60s
+StartLimitBurst=3
+
+[Install]
+WantedBy=multi-user.target

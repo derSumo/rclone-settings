@@ -1,6 +1,8 @@
 # Vorinstalliern muss sein
 > rclone (bitte nicht von der REPO, sondern direkt das neuste)
+
 > fuse
+
 > MergeFS https://github.com/trapexit/mergerfs/releases/
 
 # rclone-settings
